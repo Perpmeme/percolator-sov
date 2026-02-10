@@ -1,73 +1,135 @@
 "use client";
 
-import { Globe, ArrowRight, FlaskConical } from "lucide-react";
-import { useNetwork } from "@/components/providers/network-context";
+import { useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useDrift } from "@/components/providers/drift-provider";
+import { DriftMarketSelector } from "./drift-market-selector";
+import { DriftMarketStats } from "./drift-market-stats";
+import { DriftTradeTicket } from "./drift-trade-ticket";
+import { DriftPositions, DriftAccountActions } from "./drift-positions";
+import { ReceiptsSidebar } from "./receipts-sidebar";
+import {
+  Loader2,
+  Wallet,
+  AlertCircle,
+  PanelRight,
+  PanelRightClose,
+} from "lucide-react";
 
 export function MainnetView() {
-  const { setNetwork } = useNetwork();
+  const wallet = useWallet();
+  const { isInitializing, error } = useDrift();
+  const [selectedMarketIndex, setSelectedMarketIndex] = useState(0); // SOL-PERP
+  const [showReceipts, setShowReceipts] = useState(true);
 
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-background px-8">
-      <div className="flex max-w-lg flex-col items-center gap-6">
-        {/* Icon */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface border border-border">
-          <Globe className="h-8 w-8 text-muted-foreground" />
-        </div>
-
-        {/* Title */}
-        <div className="flex flex-col items-center gap-2">
-          <h2 className="text-balance text-center font-mono text-xl font-bold text-foreground">
-            Mainnet / Drift Integration
-          </h2>
-          <p className="text-pretty text-center text-sm leading-relaxed text-muted-foreground">
-            The mainnet mode will integrate with Drift Protocol for live
-            perpetual futures trading on Solana mainnet-beta. This feature is
-            under active development.
-          </p>
-        </div>
-
-        {/* Roadmap items */}
-        <div className="w-full rounded-xl border border-border bg-card p-5">
-          <div className="flex flex-col gap-3">
-            {[
-              { label: "Drift SDK integration", active: true },
-              { label: "Mainnet market data feeds", active: false },
-              { label: "Cross-margin position management", active: false },
-              { label: "Advanced order types", active: false },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3">
-                <div
-                  className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                    item.active ? "bg-accent live-dot" : "bg-border"
-                  }`}
-                />
-                <span
-                  className={`font-mono text-xs ${
-                    item.active ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </span>
-                {item.active && (
-                  <span className="rounded-md bg-accent/10 border border-accent/20 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-accent">
-                    IN PROGRESS
-                  </span>
-                )}
-              </div>
-            ))}
+  // Not connected state
+  if (!wallet.publicKey) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center bg-background px-8">
+        <div className="flex max-w-md flex-col items-center gap-5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface border border-border">
+            <Wallet className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-balance text-center font-mono text-lg font-bold text-foreground">
+              Connect Wallet for Mainnet
+            </h2>
+            <p className="text-pretty text-center text-sm leading-relaxed text-muted-foreground">
+              Connect your Solana wallet to access live Drift perpetual futures trading on mainnet-beta.
+            </p>
           </div>
         </div>
-
-        {/* Switch to devnet */}
-        <button
-          onClick={() => setNetwork("devnet")}
-          className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-mono text-sm font-bold text-primary-foreground transition-all hover:shadow-lg hover:shadow-primary/20 glow-primary"
-        >
-          <FlaskConical className="h-4 w-4" />
-          Switch to Devnet Terminal
-          <ArrowRight className="h-4 w-4" />
-        </button>
       </div>
-    </div>
+    );
+  }
+
+  // Initializing Drift client
+  if (isInitializing) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center bg-background px-8">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="font-mono text-sm text-muted-foreground">
+            Initializing Drift Protocol...
+          </span>
+          <span className="font-mono text-xs text-muted-foreground/60">
+            Subscribing to market accounts and oracles
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center bg-background px-8">
+        <div className="flex max-w-md flex-col items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="h-7 w-7 text-destructive" />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-balance text-center font-mono text-lg font-bold text-foreground">
+              Drift Initialization Failed
+            </h2>
+            <p className="text-pretty text-center text-sm leading-relaxed text-muted-foreground">
+              {error}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full trading terminal
+  return (
+    <>
+      {/* Market stats bar */}
+      <div className="flex items-center gap-3 border-b border-border bg-card px-3 py-1.5">
+        <DriftMarketSelector
+          selectedMarketIndex={selectedMarketIndex}
+          onSelect={setSelectedMarketIndex}
+        />
+      </div>
+      <DriftMarketStats selectedMarketIndex={selectedMarketIndex} />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left sidebar: Trade + Deposit/Withdraw */}
+        <aside className="flex w-80 flex-shrink-0 flex-col overflow-y-auto border-r border-border bg-card">
+          <DriftTradeTicket selectedMarketIndex={selectedMarketIndex} />
+          <DriftAccountActions />
+        </aside>
+
+        {/* Center: Positions */}
+        <main className="flex flex-1 flex-col overflow-hidden bg-card">
+          <DriftPositions />
+        </main>
+
+        {/* Right: Receipts (collapsible) */}
+        {showReceipts && (
+          <aside className="hidden lg:flex w-80 flex-shrink-0 overflow-hidden">
+            <ReceiptsSidebar />
+          </aside>
+        )}
+      </div>
+
+      {/* Receipts toggle */}
+      <button
+        onClick={() => setShowReceipts(!showReceipts)}
+        className="fixed bottom-4 right-4 z-50 hidden lg:flex items-center gap-1.5 rounded-lg bg-card border border-border px-3 py-2 font-mono text-[11px] text-muted-foreground shadow-lg transition-all hover:text-foreground hover:border-primary/30"
+      >
+        {showReceipts ? (
+          <>
+            <PanelRightClose className="h-3.5 w-3.5" />
+            Hide Receipts
+          </>
+        ) : (
+          <>
+            <PanelRight className="h-3.5 w-3.5" />
+            Show Receipts
+          </>
+        )}
+      </button>
+    </>
   );
 }

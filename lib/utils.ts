@@ -51,3 +51,26 @@ export function bpsToPercent(bps: bigint): string {
   const pct = Number(bps) / 100;
   return `${pct.toFixed(2)}%`;
 }
+
+/**
+ * Format a number as USD with appropriate decimal places.
+ */
+export function formatUsd(value: number): string {
+  if (Math.abs(value) >= 1000) {
+    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (Math.abs(value) >= 1) {
+    return `$${value.toFixed(2)}`;
+  }
+  return `$${value.toFixed(4)}`;
+}
+
+/**
+ * Format large numbers compactly (e.g. 1.2M, 340K).
+ */
+export function formatCompact(value: number): string {
+  if (Math.abs(value) >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (Math.abs(value) >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toFixed(2);
+}
