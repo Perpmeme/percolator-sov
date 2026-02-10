@@ -1,8 +1,9 @@
-import { createCli } from "./cli.js";
+// CLI entry point -- not used by the Next.js web terminal
+// import { createCli } from "./cli.js";
 
 async function main(): Promise<void> {
-  const program = createCli();
-  await program.parseAsync(process.argv);
+  // const program = createCli();
+  // await program.parseAsync(process.argv);
 }
 
 main().catch((err) => {

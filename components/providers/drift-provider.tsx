@@ -99,6 +99,21 @@ export function DriftProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Validate RPC before attempting Drift init -- public endpoints get 403'd
+    const rpcUrl = connection.rpcEndpoint;
+    const isPublicRpc =
+      rpcUrl.includes("api.mainnet-beta.solana.com") ||
+      rpcUrl.includes("solana.publicnode.com") ||
+      !process.env.NEXT_PUBLIC_MAINNET_RPC_URL;
+
+    if (isPublicRpc) {
+      setError(
+        "Mainnet requires a private RPC endpoint. Set NEXT_PUBLIC_MAINNET_RPC_URL (Helius, QuickNode, Alchemy, etc.)."
+      );
+      setIsInitializing(false);
+      return;
+    }
+
     let cancelled = false;
     setIsInitializing(true);
     setError(null);
