@@ -1,35 +1,39 @@
 {
-  "name": "percolator-cli",
+  "name": "percolator-terminal",
   "version": "0.1.0",
+  "private": true,
   "license": "Apache-2.0",
   "type": "module",
-  "bin": {
-    "percolator-cli": "./dist/index.js"
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "tsup",
-    "dev": "pnpm build && node dist/index.js",
-    "test": "tsx test/abi.test.ts && tsx test/pda.test.ts && tsx test/slab.test.ts && tsx test/validation.test.ts"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
     "@pythnetwork/hermes-client": "^2.1.0",
     "@pythnetwork/pyth-solana-receiver": "^0.13.0",
     "@solana/spl-token": "^0.3.11",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.4",
-    "commander": "^12.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "swr": "^2.2.5",
+    "tailwind-merge": "^2.6.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
     "@types/node": "^20.17.10",
-    "dotenv": "^17.2.4",
-    "tsup": "^8.3.5",
-    "tsx": "^4.21.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.1.7",
     "typescript": "^5.7.2"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }
