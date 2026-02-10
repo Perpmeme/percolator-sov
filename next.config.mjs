@@ -27,7 +27,7 @@ const nextConfig = {
         url: false,
         assert: false,
         util: false,
-        buffer: false,
+        // buffer: provided by webpack automatically
       };
     }
 

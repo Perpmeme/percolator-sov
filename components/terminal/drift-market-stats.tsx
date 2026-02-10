@@ -3,7 +3,6 @@
 import { useDrift } from "@/components/providers/drift-provider";
 import { formatUsd, formatCompact } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import type { DriftMarketInfo } from "@/lib/drift-sdk";
 
 interface DriftMarketStatsProps {
   selectedMarketIndex: number;
@@ -12,7 +11,7 @@ interface DriftMarketStatsProps {
 export function DriftMarketStats({ selectedMarketIndex }: DriftMarketStatsProps) {
   const { markets, isInitializing } = useDrift();
 
-  const market: DriftMarketInfo | undefined = markets.find(
+  const market = markets.find(
     (m) => m.marketIndex === selectedMarketIndex
   );
 
