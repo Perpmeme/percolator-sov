@@ -5,6 +5,7 @@ import { ReceiptsProvider } from "@/components/providers/receipts-context";
 import { TerminalLayout } from "@/components/terminal/terminal-layout";
 
 export default function Home() {
+  console.log("[v0] Percolator Terminal page loaded");
   return (
     <NetworkProvider>
       <ReceiptsProvider>
