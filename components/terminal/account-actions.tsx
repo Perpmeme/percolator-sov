@@ -8,25 +8,21 @@ import {
   DEVNET_ORACLE,
 } from "@/lib/percolator-sdk";
 import { useUserAccount } from "@/hooks/use-market-data";
-import {
-  useReceipts,
-  type TxReceipt,
-} from "@/components/providers/receipts-context";
+import { useReceipts, type TxReceipt } from "@/components/providers/receipts-context";
 import {
   UserPlus,
   ArrowDownToLine,
   ArrowUpFromLine,
   RotateCcw,
   Loader2,
+  Settings,
 } from "lucide-react";
 
 type ActionType = "init" | "deposit" | "withdraw" | "crank";
 
 export function AccountActions() {
   const wallet = useWallet();
-  const { data: userAccount, mutate } = useUserAccount(
-    wallet.publicKey ?? null
-  );
+  const { data: userAccount, mutate } = useUserAccount(wallet.publicKey ?? null);
   const { addReceipt, updateReceipt } = useReceipts();
 
   const [amountInput, setAmountInput] = useState("");
@@ -53,50 +49,27 @@ export function AccountActions() {
         let tx;
 
         switch (action) {
-          case "init": {
-            // Fee is new_account_fee from params (read from slab), we pass 0 for devnet
+          case "init":
             tx = await sdk.buildInitUserTx(wallet.publicKey, DEVNET_SLAB, 0n);
             break;
-          }
           case "deposit": {
             if (!userAccount) throw new Error("No user account");
-            const amt = BigInt(
-              Math.round(parseFloat(amountInput) * 1e9)
-            );
-            tx = await sdk.buildDepositTx(
-              wallet.publicKey,
-              DEVNET_SLAB,
-              userAccount.idx,
-              amt
-            );
+            const dAmt = BigInt(Math.round(parseFloat(amountInput) * 1e9));
+            tx = await sdk.buildDepositTx(wallet.publicKey, DEVNET_SLAB, userAccount.idx, dAmt);
             break;
           }
           case "withdraw": {
             if (!userAccount) throw new Error("No user account");
-            const amt = BigInt(
-              Math.round(parseFloat(amountInput) * 1e9)
-            );
-            tx = await sdk.buildWithdrawTx(
-              wallet.publicKey,
-              DEVNET_SLAB,
-              userAccount.idx,
-              amt
-            );
+            const wAmt = BigInt(Math.round(parseFloat(amountInput) * 1e9));
+            tx = await sdk.buildWithdrawTx(wallet.publicKey, DEVNET_SLAB, userAccount.idx, wAmt);
             break;
           }
-          case "crank": {
-            tx = await sdk.buildCrankTx(
-              wallet.publicKey,
-              DEVNET_SLAB,
-              DEVNET_ORACLE,
-              400_000
-            );
+          case "crank":
+            tx = await sdk.buildCrankTx(wallet.publicKey, DEVNET_SLAB, DEVNET_ORACLE, 400_000);
             break;
-          }
         }
 
         const result = await sdk.sendTransaction(wallet, tx);
-
         updateReceipt(receiptId, {
           signature: result.signature,
           slot: result.slot,
@@ -124,69 +97,82 @@ export function AccountActions() {
   const hasAccount = !!userAccount;
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border p-4">
-      <h3 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        Account Actions
-      </h3>
-
-      {/* Amount input for deposit/withdraw */}
-      <div className="flex flex-col gap-1.5">
-        <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          Amount (SOL)
-        </label>
-        <input
-          type="number"
-          value={amountInput}
-          onChange={(e) => setAmountInput(e.target.value)}
-          placeholder="0.00"
-          className="rounded-md border border-border bg-input px-3 py-1.5 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+    <div className="flex flex-col border-t border-border">
+      {/* Section header */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <Settings className="h-4 w-4 text-muted-foreground" />
+        <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-foreground">
+          Account
+        </h3>
       </div>
 
-      {/* Action buttons */}
-      <div className="grid grid-cols-2 gap-2">
-        {!hasAccount && (
+      <div className="flex flex-col gap-4 p-4">
+        {/* Init button when no account */}
+        {!hasAccount && isConnected && (
           <button
             onClick={() => executeAction("init")}
-            disabled={!isConnected || activeAction !== null}
-            className="col-span-2 flex items-center justify-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-2 font-mono text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={activeAction !== null}
+            className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 px-4 py-3 font-mono text-xs font-bold text-primary uppercase tracking-wider transition-all hover:border-primary/60 hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {activeAction === "init" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <UserPlus className="h-3.5 w-3.5" />
+              <UserPlus className="h-4 w-4" />
             )}
-            Init Account
+            Initialize Account
           </button>
         )}
-        <button
-          onClick={() => executeAction("deposit")}
-          disabled={!isConnected || !hasAccount || !amountInput || activeAction !== null}
-          className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 font-mono text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {activeAction === "deposit" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <ArrowDownToLine className="h-3.5 w-3.5" />
-          )}
-          Deposit
-        </button>
-        <button
-          onClick={() => executeAction("withdraw")}
-          disabled={!isConnected || !hasAccount || !amountInput || activeAction !== null}
-          className="flex items-center justify-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 font-mono text-xs font-medium text-foreground transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {activeAction === "withdraw" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <ArrowUpFromLine className="h-3.5 w-3.5" />
-          )}
-          Withdraw
-        </button>
+
+        {/* Amount input */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              Amount
+            </label>
+            <span className="font-mono text-[11px] text-muted-foreground">SOL</span>
+          </div>
+          <input
+            type="number"
+            value={amountInput}
+            onChange={(e) => setAmountInput(e.target.value)}
+            placeholder="0.00"
+            className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+          />
+        </div>
+
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => executeAction("deposit")}
+            disabled={!isConnected || !hasAccount || !amountInput || activeAction !== null}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-xs font-semibold text-foreground transition-all hover:border-long/50 hover:bg-long/5 hover:text-long disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {activeAction === "deposit" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ArrowDownToLine className="h-3.5 w-3.5" />
+            )}
+            Deposit
+          </button>
+          <button
+            onClick={() => executeAction("withdraw")}
+            disabled={!isConnected || !hasAccount || !amountInput || activeAction !== null}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2.5 font-mono text-xs font-semibold text-foreground transition-all hover:border-accent/50 hover:bg-accent/5 hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {activeAction === "withdraw" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ArrowUpFromLine className="h-3.5 w-3.5" />
+            )}
+            Withdraw
+          </button>
+        </div>
+
+        {/* Crank */}
         <button
           onClick={() => executeAction("crank")}
           disabled={!isConnected || activeAction !== null}
-          className="col-span-2 flex items-center justify-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 font-mono text-xs font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2.5 font-mono text-xs font-semibold text-muted-foreground transition-all hover:border-foreground/30 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {activeAction === "crank" ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

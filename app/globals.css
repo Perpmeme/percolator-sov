@@ -1,31 +1,33 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: #0a0e14;
-  --color-foreground: #c5cdd9;
-  --color-card: #111820;
-  --color-card-foreground: #c5cdd9;
-  --color-popover: #111820;
-  --color-popover-foreground: #c5cdd9;
-  --color-primary: #00e5a0;
-  --color-primary-foreground: #0a0e14;
-  --color-secondary: #1a2332;
-  --color-secondary-foreground: #c5cdd9;
-  --color-muted: #151c27;
-  --color-muted-foreground: #6b7b8d;
-  --color-accent: #ff6b35;
-  --color-accent-foreground: #0a0e14;
+@theme inline {
+  --color-background: #080b10;
+  --color-foreground: #e0e4ea;
+  --color-card: #0d1117;
+  --color-card-foreground: #e0e4ea;
+  --color-popover: #0d1117;
+  --color-popover-foreground: #e0e4ea;
+  --color-primary: #00dc82;
+  --color-primary-foreground: #080b10;
+  --color-secondary: #151b24;
+  --color-secondary-foreground: #e0e4ea;
+  --color-muted: #111822;
+  --color-muted-foreground: #5c6b7e;
+  --color-accent: #f97316;
+  --color-accent-foreground: #080b10;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-border: #1e2a3a;
-  --color-input: #1a2332;
-  --color-ring: #00e5a0;
-  --color-long: #00e5a0;
+  --color-border: #1c2433;
+  --color-input: #151b24;
+  --color-ring: #00dc82;
+  --color-long: #00dc82;
   --color-short: #ef4444;
-  --radius: 0.375rem;
+  --color-surface: #0f1419;
+  --color-surface-elevated: #131a23;
+  --radius: 0.5rem;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 }
 
 * {
@@ -38,30 +40,47 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Solana wallet adapter overrides */
+/* Wallet adapter overrides */
 .wallet-adapter-button {
   background-color: var(--color-primary) !important;
   color: var(--color-primary-foreground) !important;
   border-radius: var(--radius) !important;
   font-size: 0.8125rem !important;
-  height: 2rem !important;
-  padding: 0 0.75rem !important;
+  height: 2.25rem !important;
+  padding: 0 1rem !important;
   font-weight: 600 !important;
+  font-family: var(--font-sans) !important;
+  letter-spacing: -0.01em !important;
+  transition: all 150ms ease !important;
 }
 .wallet-adapter-button:hover {
-  opacity: 0.9 !important;
+  opacity: 0.88 !important;
+  transform: translateY(-1px) !important;
 }
 .wallet-adapter-modal-wrapper {
   background: var(--color-card) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.75rem !important;
+}
+.wallet-adapter-modal-title {
+  color: var(--color-foreground) !important;
+  font-family: var(--font-sans) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background-color: var(--color-secondary) !important;
+  color: var(--color-foreground) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background-color: var(--color-surface-elevated) !important;
 }
 
-/* Scrollbar styling */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-background);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
@@ -71,7 +90,7 @@ body {
   background: var(--color-muted-foreground);
 }
 
-/* Number input spinners hidden */
+/* Number spinners hidden */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -79,4 +98,32 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Glow effects */
+.glow-long {
+  box-shadow: 0 0 20px rgba(0, 220, 130, 0.08);
+}
+.glow-short {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.08);
+}
+.glow-primary {
+  box-shadow: 0 0 20px rgba(0, 220, 130, 0.06);
+}
+
+/* Panel sections */
+.panel-section {
+  padding: 1rem;
+}
+.panel-section + .panel-section {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Pulse animation for live data */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.live-dot {
+  animation: live-pulse 2s ease-in-out infinite;
 }

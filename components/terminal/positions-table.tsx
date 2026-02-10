@@ -3,7 +3,13 @@
 import { useMarketData } from "@/hooks/use-market-data";
 import { shortenAddress } from "@/lib/utils";
 import { AccountKind } from "@/lib/percolator-sdk";
-import { Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  LayoutList,
+} from "lucide-react";
 
 export function PositionsTable() {
   const { data, isLoading } = useMarketData();
@@ -11,7 +17,12 @@ export function PositionsTable() {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+          <span className="font-mono text-xs text-muted-foreground">
+            Loading positions...
+          </span>
+        </div>
       </div>
     );
   }
@@ -20,36 +31,40 @@ export function PositionsTable() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="border-b border-border px-4 py-2">
-        <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          All Positions ({accounts.length})
-        </h2>
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <div className="flex items-center gap-2">
+          <LayoutList className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-foreground">
+            Positions
+          </h2>
+          <span className="rounded-md bg-surface-elevated px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+            {accounts.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-long live-dot" />
+          <span className="font-mono text-[10px] text-muted-foreground">Auto-refresh 5s</span>
+        </div>
       </div>
+
+      {/* Table */}
       <div className="flex-1 overflow-auto">
         <table className="w-full">
-          <thead className="sticky top-0 bg-card">
+          <thead className="sticky top-0 z-10 bg-card">
             <tr className="border-b border-border">
-              <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Idx
-              </th>
-              <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Type
-              </th>
-              <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Owner
-              </th>
-              <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Capital
-              </th>
-              <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Position
-              </th>
-              <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                Entry
-              </th>
-              <th className="px-3 py-2 text-right font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                PnL
-              </th>
+              {["Idx", "Type", "Owner", "Capital", "Position", "Entry", "PnL"].map(
+                (col, i) => (
+                  <th
+                    key={col}
+                    className={`px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground ${
+                      i >= 3 ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {col}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
           <tbody>
@@ -57,9 +72,14 @@ export function PositionsTable() {
               <tr>
                 <td
                   colSpan={7}
-                  className="px-3 py-8 text-center font-mono text-xs text-muted-foreground"
+                  className="px-4 py-12 text-center"
                 >
-                  No accounts found
+                  <div className="flex flex-col items-center gap-3">
+                    <LayoutList className="h-8 w-8 text-border" />
+                    <span className="font-mono text-xs text-muted-foreground">
+                      No accounts found on this slab
+                    </span>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -68,35 +88,38 @@ export function PositionsTable() {
                 const capital = Number(account.capital) / 1e9;
                 const pnl = Number(account.pnl) / 1e9;
                 const entryPrice = Number(account.entryPrice) / 1e6;
+                const isLp = account.kind === AccountKind.LP;
 
                 return (
                   <tr
                     key={idx}
-                    className="border-b border-border/50 transition-colors hover:bg-secondary/50"
+                    className="border-b border-border/40 transition-colors hover:bg-surface-elevated/50 group"
                   >
-                    <td className="px-3 py-2 font-mono text-xs text-foreground">
+                    <td className="px-4 py-2.5 font-mono text-xs font-medium text-foreground">
                       {idx}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-4 py-2.5">
                       <span
-                        className={`inline-flex rounded px-1.5 py-0.5 font-mono text-[10px] font-medium ${
-                          account.kind === AccountKind.LP
-                            ? "bg-accent/10 text-accent"
-                            : "bg-primary/10 text-primary"
+                        className={`inline-flex items-center rounded-md px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider ${
+                          isLp
+                            ? "bg-accent/10 text-accent border border-accent/20"
+                            : "bg-primary/10 text-primary border border-primary/20"
                         }`}
                       >
-                        {account.kind === AccountKind.LP ? "LP" : "USER"}
+                        {isLp ? "LP" : "USER"}
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
-                      {shortenAddress(account.owner.toBase58())}
+                    <td className="px-4 py-2.5">
+                      <span className="font-mono text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                        {shortenAddress(account.owner.toBase58())}
+                      </span>
                     </td>
-                    <td className="px-3 py-2 text-right font-mono text-xs text-foreground">
+                    <td className="px-4 py-2.5 text-right font-mono text-xs font-medium text-foreground">
                       {capital.toFixed(4)}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-4 py-2.5 text-right">
                       <span
-                        className={`inline-flex items-center gap-1 font-mono text-xs ${
+                        className={`inline-flex items-center gap-1 font-mono text-xs font-medium ${
                           posSize > 0
                             ? "text-long"
                             : posSize < 0
@@ -111,14 +134,14 @@ export function PositionsTable() {
                         ) : (
                           <Minus className="h-3 w-3" />
                         )}
-                        {posSize.toFixed(4)}
+                        {Math.abs(posSize).toFixed(4)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-right font-mono text-xs text-foreground">
+                    <td className="px-4 py-2.5 text-right font-mono text-xs text-foreground">
                       {entryPrice > 0 ? `$${entryPrice.toFixed(2)}` : "--"}
                     </td>
                     <td
-                      className={`px-3 py-2 text-right font-mono text-xs ${
+                      className={`px-4 py-2.5 text-right font-mono text-xs font-medium ${
                         pnl > 0
                           ? "text-long"
                           : pnl < 0

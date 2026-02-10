@@ -2,25 +2,38 @@
 
 import { useMarketData } from "@/hooks/use-market-data";
 import { shortenAddress } from "@/lib/utils";
-import { DEVNET_SLAB, DEVNET_PROGRAM_ID, DEVNET_MATCHER_PROGRAM_ID, DEVNET_ORACLE } from "@/lib/percolator-sdk";
-import { ExternalLink, Cpu, Database, Eye } from "lucide-react";
+import {
+  DEVNET_SLAB,
+  DEVNET_PROGRAM_ID,
+  DEVNET_MATCHER_PROGRAM_ID,
+  DEVNET_ORACLE,
+} from "@/lib/percolator-sdk";
+import { ExternalLink, Cpu, Database } from "lucide-react";
 
-function InfoRow({ label, value, href }: { label: string; value: string; href?: string }) {
+function AddressRow({
+  label,
+  pubkey,
+  cluster = "devnet",
+}: {
+  label: string;
+  pubkey: string;
+  cluster?: string;
+}) {
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center justify-between gap-2 group">
       <span className="font-mono text-[10px] text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-1">
-        <span className="font-mono text-[10px] text-foreground">{value}</span>
-        {href && (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80"
-          >
-            <ExternalLink className="h-2.5 w-2.5" />
-          </a>
-        )}
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-[10px] text-foreground/80 group-hover:text-foreground transition-colors">
+          {shortenAddress(pubkey, 4)}
+        </span>
+        <a
+          href={`https://explorer.solana.com/address/${pubkey}?cluster=${cluster}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="opacity-0 group-hover:opacity-100 text-primary hover:text-primary/80 transition-all"
+        >
+          <ExternalLink className="h-2.5 w-2.5" />
+        </a>
       </div>
     </div>
   );
@@ -29,72 +42,73 @@ function InfoRow({ label, value, href }: { label: string; value: string; href?: 
 export function ProgramInfo() {
   const { data } = useMarketData();
 
-  const explorerBase = "https://explorer.solana.com";
-  const cluster = "?cluster=devnet";
-
   return (
-    <div className="flex flex-col gap-3 border-t border-border p-4">
-      <div className="flex items-center gap-1.5">
-        <Cpu className="h-3 w-3 text-muted-foreground" />
-        <h3 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          Program Info
+    <div className="flex flex-col border-t border-border">
+      {/* Program section */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+        <Cpu className="h-4 w-4 text-muted-foreground" />
+        <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-foreground">
+          Program
         </h3>
       </div>
-
-      <div className="flex flex-col gap-1.5">
-        <InfoRow
-          label="Program"
-          value={shortenAddress(DEVNET_PROGRAM_ID.toBase58(), 4)}
-          href={`${explorerBase}/address/${DEVNET_PROGRAM_ID.toBase58()}${cluster}`}
-        />
-        <InfoRow
-          label="Matcher"
-          value={shortenAddress(DEVNET_MATCHER_PROGRAM_ID.toBase58(), 4)}
-          href={`${explorerBase}/address/${DEVNET_MATCHER_PROGRAM_ID.toBase58()}${cluster}`}
-        />
-        <InfoRow
-          label="Slab"
-          value={shortenAddress(DEVNET_SLAB.toBase58(), 4)}
-          href={`${explorerBase}/address/${DEVNET_SLAB.toBase58()}${cluster}`}
-        />
-        <InfoRow
-          label="Oracle"
-          value={shortenAddress(DEVNET_ORACLE.toBase58(), 4)}
-          href={`${explorerBase}/address/${DEVNET_ORACLE.toBase58()}${cluster}`}
-        />
+      <div className="flex flex-col gap-1.5 p-4">
+        <AddressRow label="Program" pubkey={DEVNET_PROGRAM_ID.toBase58()} />
+        <AddressRow label="Matcher" pubkey={DEVNET_MATCHER_PROGRAM_ID.toBase58()} />
+        <AddressRow label="Slab" pubkey={DEVNET_SLAB.toBase58()} />
+        <AddressRow label="Oracle" pubkey={DEVNET_ORACLE.toBase58()} />
         {data?.config && (
           <>
-            <InfoRow
+            <AddressRow
               label="Collateral"
-              value={shortenAddress(data.config.collateralMint.toBase58(), 4)}
-              href={`${explorerBase}/address/${data.config.collateralMint.toBase58()}${cluster}`}
+              pubkey={data.config.collateralMint.toBase58()}
             />
-            <InfoRow
+            <AddressRow
               label="Vault"
-              value={shortenAddress(data.config.vaultPubkey.toBase58(), 4)}
-              href={`${explorerBase}/address/${data.config.vaultPubkey.toBase58()}${cluster}`}
+              pubkey={data.config.vaultPubkey.toBase58()}
             />
           </>
         )}
       </div>
 
+      {/* Slab state */}
       {data?.header && (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5">
-            <Database className="h-3 w-3 text-muted-foreground" />
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <>
+          <div className="flex items-center gap-2 px-4 py-3 border-t border-b border-border">
+            <Database className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-foreground">
               Slab State
-            </span>
+            </h3>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <InfoRow label="Version" value={data.header.version.toString()} />
-            <InfoRow label="Nonce" value={data.header.nonce.toString()} />
-            <InfoRow
-              label="Resolved"
-              value={data.header.resolved ? "Yes" : "No"}
-            />
+          <div className="flex flex-col gap-1.5 p-4">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] text-muted-foreground">Version</span>
+              <span className="font-mono text-[10px] text-foreground">
+                {data.header.version.toString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] text-muted-foreground">Nonce</span>
+              <span className="font-mono text-[10px] text-foreground">
+                {data.header.nonce.toString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] text-muted-foreground">Status</span>
+              <span
+                className={`inline-flex items-center gap-1 font-mono text-[10px] font-semibold ${
+                  data.header.resolved ? "text-accent" : "text-long"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    data.header.resolved ? "bg-accent" : "bg-long"
+                  }`}
+                />
+                {data.header.resolved ? "Resolved" : "Active"}
+              </span>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
